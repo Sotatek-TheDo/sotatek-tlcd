@@ -32,23 +32,23 @@ class Background {
                 return __awaiter(this, void 0, void 0, function* () {
                     const portalCookie = cookies[0];
                     if (!portalCookie) {
-                        chrome.storage.local.set({ login_portal_status: false });
+                        yield chrome.storage.local.set({
+                            login_portal_status: 'no_cookie',
+                        });
                         (0, utils_1.inject)(details.tabId);
                         return;
                     }
-                    else {
-                        chrome.storage.local.set({ login_portal_status: true });
-                    }
                     const sessionHeader = 'session_id=' + portalCookie.value;
                     let needCheck = yield new Promise((resolve, reject) => {
-                        chrome.storage.local.get('userData', (data) => {
-                            if (data.userData === undefined) {
+                        chrome.storage.local.get('employee_data', (data) => {
+                            var _a;
+                            if (data.employee_data === undefined) {
                                 resolve(true);
                                 return;
                             }
-                            const dateCheck = data.userData.date_check;
-                            const checkedToday = dateCheck === (0, utils_1.getCurrentFormattedDate)() &&
-                                data.userData.check_in !== false;
+                            const userData = (_a = data.employee_data.result) === null || _a === void 0 ? void 0 : _a.records[0];
+                            const checkedToday = (userData === null || userData === void 0 ? void 0 : userData.date_check) === (0, utils_1.getCurrentFormattedDate)() &&
+                                (userData === null || userData === void 0 ? void 0 : userData.check_in) !== false;
                             if (checkedToday)
                                 resolve(false);
                             else
@@ -68,23 +68,30 @@ class Background {
                             const fetchApis = new fetch_apis_1.default();
                             fetchApis
                                 .fetchUserId(sessionHeader, gb_ie.gb_ie)
-                                .then((user) => {
+                                .then((user) => __awaiter(this, void 0, void 0, function* () {
                                 if (user.result === undefined || !user.result.length) {
                                     console.log('Cannot fetch user id');
+                                    yield chrome.storage.local.set({
+                                        login_portal_status: 'session_expired',
+                                    });
+                                    (0, utils_1.inject)(details.tabId);
                                     return;
                                 }
+                                yield chrome.storage.local.set({
+                                    login_portal_status: 'session_up',
+                                });
                                 const userId = user.result.records[0].attendance_machine_id;
                                 fetchApis
                                     .fetchUserData(sessionHeader, userId)
-                                    .then((data) => {
+                                    .then((data) => __awaiter(this, void 0, void 0, function* () {
                                     if (data.result === undefined) {
                                         console.log('Cannot fetch user data');
                                         return;
                                     }
-                                    chrome.storage.local.set({ employee_data: data });
+                                    yield chrome.storage.local.set({ employee_data: data });
                                     (0, utils_1.inject)(details.tabId);
-                                });
-                            });
+                                }));
+                            }));
                         });
                     }
                     else {
@@ -96,7 +103,7 @@ class Background {
             url: [
                 {
                     // Runs on example.com, example.net, but also example.foo.com
-                    hostContains: 'chat',
+                    urlContains: 'chat',
                 },
             ],
         });

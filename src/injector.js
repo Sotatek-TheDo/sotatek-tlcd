@@ -130,10 +130,11 @@ const utils_1 = __webpack_require__(593);
 class Injector {
     constructor() {
         this.containerStyle = {
-            display: 'flex',
-            height: '39px',
+            display: 'block',
+            padding: '3px 0',
             width: '100%',
             paddingLeft: '24px',
+            paddingRight: '24px',
             alignItems: 'center',
             fontSize: '14px',
             boxSizing: 'border-box',
@@ -141,32 +142,53 @@ class Injector {
             color: 'inherit',
             marginTop: '5px',
         };
+        this.collapsedContainerStyle = {
+            display: 'none',
+            margin: '5px auto',
+            padding: '2px',
+            borderRadius: '4px',
+            fontSize: '18px',
+        };
         this.inject();
     }
     inject() {
         chrome.storage.local.get(constance_1.STORAGE_KEYS.LOGIN_PORTAL_STATUS, (status) => {
             const toElement = Array.from(document.getElementsByClassName('adZ'))[0];
             let container = document.getElementById('tlcd');
+            let collapsedContainer = document.getElementById('tlcd-collapsed');
             if (!container) {
                 container = document.createElement('div');
                 this.setStyle(container, this.containerStyle);
                 container.setAttribute('id', 'tlcd');
                 toElement.insertBefore(container, toElement.firstChild);
             }
-            if (status.login_portal_status) {
+            if (!collapsedContainer) {
+                collapsedContainer = document.createElement('div');
+                this.setStyle(collapsedContainer, this.collapsedContainerStyle);
+                collapsedContainer.innerHTML = '&#9201;';
+                collapsedContainer.setAttribute('id', 'tlcd-collapsed');
+                toElement.insertBefore(collapsedContainer, toElement.firstChild);
+            }
+            if (status.login_portal_status == 'no_cookie' ||
+                status.login_portal_status == 'session_expired') {
+                container.innerHTML = this.getInnerHtml(constance_1.INNER_HTML_TYPE.MESSAGE, {
+                    message: `You're not logged in to portal&nbsp;<a style="text-decoration: none; color: #b0db0a; font-weight: bold; font-style: italic; letter-spacing: 0.8px" href="https://portal.sotatek.com">&#128073; login</a>`,
+                });
+            }
+            else {
                 chrome.storage.local.get(constance_1.STORAGE_KEYS.EMPLOYEE_DATA, (data) => {
                     var _a, _b;
                     const userData = (_b = (_a = data.employee_data) === null || _a === void 0 ? void 0 : _a.result) === null || _b === void 0 ? void 0 : _b.records[0];
                     if (!userData.check_in) {
                         container.innerHTML = this.getInnerHtml(constance_1.INNER_HTML_TYPE.MESSAGE, {
-                            message: `No check-in data yet`,
+                            message: `No check in data yet &#129335;`,
                         });
                         return;
                     }
                     let checkInTime = (0, utils_1.stringToTime)(userData.check_in.split(' ')[1]);
                     checkInTime.setHours(checkInTime.getHours() + 7);
-                    checkInTime = (0, utils_1.normalizeTime)(checkInTime);
                     const checkInText = (0, utils_1.dateToString)(checkInTime);
+                    checkInTime = (0, utils_1.normalizeTime)(checkInTime);
                     const timeOff = this.getTimeOff(checkInTime);
                     if (container.innerHTML.includes('Check'))
                         return;
@@ -176,6 +198,18 @@ class Injector {
                             timeLeft: '0',
                         });
                     }
+                    const tlcd_message = document.getElementById('tlcd_message');
+                    const latestExceptTime = this.getLatestExceptTime();
+                    const lateDiff = checkInTime.getTime() - latestExceptTime.getTime();
+                    if (tlcd_message &&
+                        checkInTime > latestExceptTime &&
+                        checkInTime &&
+                        lateDiff > 60000) {
+                        const percentOfWorkTime = (lateDiff / 288000).toFixed(2);
+                        const message = `You're late ${percentOfWorkTime}% of work time &#128184;`;
+                        tlcd_message.style.display = 'block';
+                        tlcd_message.innerHTML = message;
+                    }
                     const interval = setInterval(() => {
                         const currentTime = new Date();
                         const millisecondsDiff = timeOff.getTime() - currentTime.getTime();
@@ -183,7 +217,7 @@ class Injector {
                             clearInterval(interval);
                             container.style.height = '20px';
                             container.innerHTML = this.getInnerHtml(constance_1.INNER_HTML_TYPE.MESSAGE, {
-                                message: `It's time to go home :)`,
+                                message: `It's time to go home&nbsp; &#127969; &#127939;`,
                             });
                             return;
                         }
@@ -192,11 +226,7 @@ class Injector {
                         tle.innerHTML = timeLeft;
                     }, 1000);
                 });
-            }
-            else {
-                container.innerHTML = this.getInnerHtml(constance_1.INNER_HTML_TYPE.MESSAGE, {
-                    message: `You are not logged in portal!`,
-                });
+                this.onClassChange(container, collapsedContainer);
             }
         });
     }
@@ -206,33 +236,65 @@ class Injector {
         }
     }
     getTimeOff(checkInTime) {
-        checkInTime.setHours(checkInTime.getHours() + 9);
-        checkInTime.setMinutes(checkInTime.getMinutes() + 30);
-        checkInTime = (0, utils_1.normalizeTime)(checkInTime);
-        return checkInTime;
+        let timeOff = new Date();
+        timeOff.setHours(checkInTime.getHours() + 12);
+        timeOff.setMinutes(checkInTime.getMinutes() + 30);
+        timeOff = (0, utils_1.normalizeTime)(timeOff);
+        return timeOff;
+    }
+    getLatestExceptTime() {
+        const latestExceptTime = new Date();
+        latestExceptTime.setHours(9);
+        latestExceptTime.setMinutes(0);
+        latestExceptTime.setSeconds(0);
+        return latestExceptTime;
     }
     getInnerHtml(type, data) {
         let content = '';
         if (type === constance_1.INNER_HTML_TYPE.TIME_INFO) {
-            content = `<div style="height: 39px; width: inherit; box-sizing: border-box;">
-      <div style="height: 19px; width: inherit;">
-          <div style="display: flex; height: inherit">
-              <div style="width: 40%; height: inherit; background-color: #6086a1; border-radius: 2px 0 0 0; display: flex; align-items: center; justify-content: center">Check in</div>
-              <div style="width: 60%; height: inherit; background-color: #e7e7e7; border-radius: 0 2px 0 0; display: flex; align-items: center; justify-content: center">${data.checkIn}</div>
-          </div>
-     </div>
-      <div style="height: 19px; width: inherit; margin-top: 1px">
-          <div style="display: flex; height: inherit">
-              <div style="width: 40%; height: inherit; background-color: #6086a1; border-radius: 0 0 0 2px; display: flex; align-items: center; justify-content: center">Time left</div>
-              <div id="timeLeft" style="width: 60%; height: inherit; background-color: #e7e7e7; border-radius: 0 0 2px 0; display: flex; align-items: center; justify-content: center">${data.timeLeft}</div>
-          </div>
-      </div>
-      </div>`;
+            content = `<div style="width: inherit; box-sizing: border-box; margin-right: 16px"; display: fixed">
+                  <div id="tlcd_message" style="width: fit-content; background-color: #df4c1d; font-weight: bold;; color: white; font-size: 10px; border-radius: 4px; display: none; padding: 2px 10px; margin-bottom: 2px"></div>
+                  <div style="width: inherit;">
+                      <div style="display: flex">
+                          <div style="width: 40%; padding: 3px 2px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; background-color: #6086a1; border-radius: 2px 0 0 0; display: flex; align-items: center; justify-content: center">Check in</div>
+                          <div style="width: 60%; padding: 3px 2px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; background-color: #e7e7e7; border-radius: 0 2px 0 0; display: flex; align-items: center; justify-content: center">${data.checkIn}</div>
+                      </div>
+                  </div>
+                  <div style="width: inherit; margin-top: 1px">
+                      <div style="display: flex">
+                          <div style="width: 40%; padding: 3px 2px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; background-color: #6086a1; border-radius: 0 0 0 2px; display: flex; align-items: center; justify-content: center">Time left</div>
+                          <div id="timeLeft" style="width: 60%; padding: 3px 2px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; background-color: #e7e7e7; border-radius: 0 0 2px 0; display: flex; align-items: center; justify-content: center">${data.timeLeft}</div>
+                      </div>
+                  </div>
+                </div>`;
         }
         if (type === constance_1.INNER_HTML_TYPE.MESSAGE) {
-            content = `<div style="width: inherit; height: 20px; background-color: #6086a1; border-radius: 2px; display: flex; align-items: center; justify-content: center">${data.message}</div>`;
+            content = `<div style="width: inherit; background-color: #6086a1; border-radius: 2px; display: block; text-align: center; padding: 3px 2px">${data.message}</div>`;
         }
         return content;
+    }
+    onClassChange(container, collapsedContainer) {
+        const panel = Array.from(document.getElementsByClassName('oy8Mbf nn'))[0];
+        this.switchView(panel, container, collapsedContainer);
+        const observer = new MutationObserver((mutationList) => {
+            for (const mutation of mutationList) {
+                if (mutation.type === 'attributes' &&
+                    mutation.attributeName === 'class') {
+                    this.switchView(mutation.target, container, collapsedContainer);
+                }
+            }
+        });
+        observer.observe(panel, { attributes: true });
+    }
+    switchView(panel, expand, collapsed) {
+        if (panel.classList.contains('bhZ') && !panel.classList.contains('bym')) {
+            expand.style.display = 'none';
+            collapsed.style.display = 'block';
+        }
+        else {
+            expand.style.display = 'block';
+            collapsed.style.display = 'none';
+        }
     }
 }
 new Injector();
