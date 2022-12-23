@@ -25,9 +25,12 @@ const utils_1 = __webpack_require__(593);
 class Background {
     constructor() {
         this.run();
+        this.listener();
     }
     run() {
         chrome.webNavigation.onCompleted.addListener((details) => __awaiter(this, void 0, void 0, function* () {
+            if (details.url.includes('oi=1'))
+                return;
             chrome.cookies.getAll({ domain: 'portal.sotatek.com' }, function (cookies) {
                 return __awaiter(this, void 0, void 0, function* () {
                     const portalCookie = cookies[0];
@@ -81,14 +84,29 @@ class Background {
                                     login_portal_status: 'session_up',
                                 });
                                 const userId = user.result.records[0].attendance_machine_id;
-                                fetchApis
-                                    .fetchUserData(sessionHeader, userId)
+                                const currentDate = (0, utils_1.getCurrentFormattedDate)();
+                                const tomorrow = (0, utils_1.getCurrentFormattedDate)(1);
+                                yield fetchApis
+                                    .fetchUserData(sessionHeader, userId, currentDate, tomorrow)
                                     .then((data) => __awaiter(this, void 0, void 0, function* () {
                                     if (data.result === undefined) {
                                         console.log('Cannot fetch user data');
                                         return;
                                     }
                                     yield chrome.storage.local.set({ employee_data: data });
+                                    (0, utils_1.inject)(details.tabId);
+                                }));
+                                const { firstDay, lastDay } = (0, utils_1.getFormattedMonthRange)();
+                                yield fetchApis
+                                    .fetchUserData(sessionHeader, userId, firstDay, lastDay)
+                                    .then((data) => __awaiter(this, void 0, void 0, function* () {
+                                    if (data.result === undefined) {
+                                        console.log('Cannot fetch user data');
+                                        return;
+                                    }
+                                    yield chrome.storage.local.set({
+                                        employee_month_data: data,
+                                    });
                                     (0, utils_1.inject)(details.tabId);
                                 }));
                             }));
@@ -108,6 +126,23 @@ class Background {
             ],
         });
     }
+    listener() {
+        chrome.cookies.onChanged.addListener((changeInfo) => __awaiter(this, void 0, void 0, function* () {
+            if (changeInfo.cookie.domain === 'portal.sotatek.com') {
+                const cookie = yield new Promise((resolve, reject) => {
+                    chrome.cookies.getAll({ domain: 'portal.sotatek.com' }, function (cookies) {
+                        return __awaiter(this, void 0, void 0, function* () {
+                            const portalCookie = cookies[0];
+                            resolve(portalCookie.value);
+                        });
+                    });
+                });
+                if (changeInfo.cookie.value !== cookie) {
+                    this.run();
+                }
+            }
+        }));
+    }
 }
 new Background();
 
@@ -115,11 +150,10 @@ new Background();
 /***/ }),
 
 /***/ 203:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+/***/ (function(__unused_webpack_module, exports) {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const utils_1 = __webpack_require__(593);
 class FetchApis {
     constructor() {
         this.fetchUserId = (sessionHeader, email) => {
@@ -147,8 +181,7 @@ class FetchApis {
                 .then((response) => response.json())
                 .catch((error) => console.log('Error while fetching:', error));
         };
-        this.fetchUserData = (sessionHeader, userId) => {
-            const currentDate = (0, utils_1.getCurrentFormattedDate)();
+        this.fetchUserData = (sessionHeader, userId, from, to) => {
             return fetch('https://portal.sotatek.com/web/dataset/search_read', {
                 mode: 'cors',
                 headers: this.getHeader(sessionHeader),
@@ -161,8 +194,8 @@ class FetchApis {
                         domain: [
                             '&',
                             '&',
-                            ['date_check', '>=', currentDate],
-                            ['date_check', '<=', currentDate],
+                            ['date_check', '>=', from],
+                            ['date_check', '<', to],
                             ['employee_id.attendance_machine_id', '=', userId],
                         ],
                         fields: [
@@ -172,7 +205,7 @@ class FetchApis {
                             'check_in',
                             'check_out',
                         ],
-                        limit: 1,
+                        limit: 100,
                         sort: '',
                         context: {},
                     },
@@ -209,7 +242,7 @@ exports["default"] = FetchApis;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.inject = exports.getCurrentFormattedDate = exports.convertMsToTime = exports.dateToString = exports.normalizeTime = exports.stringToTime = void 0;
+exports.getFormattedMonthRange = exports.inject = exports.getCurrentFormattedDate = exports.convertMsToTime = exports.dateToString = exports.normalizeTime = exports.stringToTime = void 0;
 const stringToTime = (timeString) => {
     const [hh, mm, ss] = timeString.split(':');
     const time = new Date();
@@ -220,16 +253,31 @@ const stringToTime = (timeString) => {
 };
 exports.stringToTime = stringToTime;
 const normalizeTime = (time) => {
+    const normalizeTime = new Date();
     if (time.getHours() < 8) {
-        time.setHours(8);
-        time.setMinutes(0);
-        time.setSeconds(0);
+        normalizeTime.setHours(8);
+        normalizeTime.setMinutes(0);
+        normalizeTime.setSeconds(0);
+        return normalizeTime;
+    }
+    if (time.getHours() >= 9 && time.getHours() < 12) {
+        normalizeTime.setHours(9);
+        normalizeTime.setMinutes(0);
+        normalizeTime.setSeconds(0);
+        return normalizeTime;
+    }
+    if (time.getHours() >= 12 && time.getHours() < 17) {
+        normalizeTime.setHours(8);
+        normalizeTime.setMinutes(30);
+        normalizeTime.setSeconds(0);
+        return normalizeTime;
     }
     if ((time.getHours() === 18 && time.getMinutes() > 30) ||
         time.getHours() > 18) {
-        time.setHours(18);
-        time.setMinutes(30);
-        time.setSeconds(0);
+        normalizeTime.setHours(18);
+        normalizeTime.setMinutes(30);
+        normalizeTime.setSeconds(0);
+        return normalizeTime;
     }
     return time;
 };
@@ -254,12 +302,12 @@ exports.convertMsToTime = convertMsToTime;
 const padTo2Digits = (num) => {
     return num.toString().padStart(2, '0');
 };
-const getCurrentFormattedDate = () => {
-    const today = new Date();
-    const dd = String(today.getDate()).padStart(2, '0');
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const yyyy = today.getFullYear();
-    return `${yyyy}-${mm}-${dd}`;
+const getCurrentFormattedDate = (add) => {
+    const currentDate = new Date();
+    if (add) {
+        currentDate.setDate(currentDate.getDate() + add);
+    }
+    return formatDate(currentDate);
 };
 exports.getCurrentFormattedDate = getCurrentFormattedDate;
 const inject = (tabId) => {
@@ -269,6 +317,19 @@ const inject = (tabId) => {
     }, () => { });
 };
 exports.inject = inject;
+const getFormattedMonthRange = () => {
+    const date = new Date();
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    return { firstDay: formatDate(firstDay), lastDay: formatDate(lastDay) };
+};
+exports.getFormattedMonthRange = getFormattedMonthRange;
+const formatDate = (date) => {
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yyyy = date.getFullYear();
+    return `${yyyy}-${mm}-${dd}`;
+};
 
 
 /***/ })
