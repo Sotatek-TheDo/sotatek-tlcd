@@ -88,8 +88,8 @@ class Injector {
                 collapsedContainer.setAttribute('id', 'tlcd-collapsed');
                 toElement.insertBefore(collapsedContainer, toElement.firstChild);
             }
-            if (status.login_portal_status == 'no_cookie' ||
-                status.login_portal_status == 'session_expired') {
+            if (status.login_portal_status === 'no_cookie' ||
+                status.login_portal_status === 'session_expired') {
                 container.innerHTML = this.getInnerHtml(constance_1.INNER_HTML_TYPE.MESSAGE, {
                     message: `You're not logged in to portal&nbsp;<a style="text-decoration: none; color: #b0db0a; font-weight: bold; font-style: italic; letter-spacing: 0.8px" href="https://portal.sotatek.com">&#128073; login</a>`,
                 });
@@ -239,9 +239,7 @@ class Injector {
             if (!todayGoHomeMessage.length) {
                 const listGoHomeMessage = [
                     'Working hours are over &nbsp;&#128536;',
-                    'GÉT GÔ &nbsp;&#128073; &nbsp;&#128341;',
                     `It's time to go home &nbsp;&#127969; &nbsp;&#127939;`,
-                    'Té thôi  &nbsp;&#128064;',
                 ];
                 const weekendMessage = [
                     'Happy weekend &nbsp;&#127881; &nbsp;&#127881; &nbsp;&#127881;',
