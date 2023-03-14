@@ -90,6 +90,7 @@
           this.inject();
         }
         inject() {
+          console.log("inject::");
           chrome.storage.local.get(
             constance_1.STORAGE_KEYS.LOGIN_PORTAL_STATUS,
             (status) => {

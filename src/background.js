@@ -53,6 +53,7 @@
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       class Background {
         constructor() {
+          console.log("constructor::");
           this.run("constructor");
           this.listener();
           this.tabId = null;
@@ -62,7 +63,10 @@
         run(caller) {
           if (caller === "constructor") {
             chrome.webNavigation.onCompleted.addListener(
-              (details) => this.handler(details.tabId, details.url),
+              (details) => {
+                (this.tabId = details.tabId), (this.url = details.url);
+                return this.handler(details.tabId, details.url);
+              },
               {
                 url: [
                   {
@@ -82,7 +86,6 @@
             console.log("Missing tab info");
             return;
           }
-          (this.tabId = tabId), (this.url = url);
           if (url.includes("oi=1")) return;
           chrome.cookies.getAll(
             { domain: "portal.sotatek.com" },
@@ -120,7 +123,14 @@
                     else resolve(true);
                   });
                 });
-                if (needCheck) {
+                let loginState = yield new Promise((resolve, reject) => {
+                  chrome.storage.local.get("login_portal_status", (data) => {
+                    if (data.login_portal_status !== "session_up")
+                      resolve(false);
+                    else resolve(true);
+                  });
+                });
+                if (needCheck || !loginState) {
                   chrome.scripting.executeScript(
                     {
                       target: { tabId: tabId },
