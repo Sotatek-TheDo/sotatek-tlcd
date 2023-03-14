@@ -2,11 +2,7 @@
 
 ## Giới thiệu
 
-Đây là một extension giúp cho việc theo dõi check-in check-out trong ngày một cách dễ dàng bằng Google Chat. Với extension này, bạn có thể:
-
-- Đăng nhập và đăng xuất check in checkout với một cú nhấp chuột.
-- Theo dõi các hoạt động của nhóm dự án trong Google Chat.
-- Quản lý tài liệu và thông tin của dự án một cách dễ dàng.
+Đây là một extension giúp cho việc theo dõi check-in check-out trong ngày một cách dễ dàng bằng Google Chat
 
 ## Hướng dẫn cài đặt
 
