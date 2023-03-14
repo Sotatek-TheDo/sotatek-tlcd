@@ -15,4 +15,4 @@
 5. Nhấn vào nút "Load unpacked" và chọn thư mục giải nén repo của extension.
 6. Extension sẽ được cài đặt và hiển thị trong trình duyệt của bạn.
 
-Lưu ý: Hiện nay, các tool hiện đại như extension này rất khó để được upload lên Google Chrome Store, vì vậy bạn cần phải sử dụng cách tạm thời này để cài đặt extension.
+Lưu ý: Hiện nay, các tool như extension này rất khó để được upload lên Google Chrome Store, vì vậy bạn cần phải sử dụng cách tạm thời này để cài đặt extension.
