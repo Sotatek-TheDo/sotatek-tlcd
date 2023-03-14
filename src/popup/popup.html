@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>My Extension Popup</title>
+    <style>
+      body {
+        background-color: #f6f6f6;
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .my-extension {
+        font-family: "Roboto", sans-serif;
+        background-color: #ffffff;
+        color: #1c1c1c;
+        margin: 0;
+        padding: 16px;
+        border-radius: 8px;
+        width: 80%;
+        max-width: 360px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e5e5;
+      }
+
+      .my-extension h1 {
+        font-size: 22px;
+        font-weight: bold;
+        margin-top: 0;
+        margin-bottom: 16px;
+        color: #1c1c1c;
+        text-align: center;
+        text-shadow: none;
+      }
+
+      .my-extension p {
+        font-size: 14px;
+        margin-top: 0;
+        margin-bottom: 16px;
+        color: #6d6d6d;
+        display: block;
+        padding: 5px 0;
+        border-bottom: 1px solid #e5e5e5;
+      }
+
+      .my-extension a {
+        color: #0072c6;
+        text-decoration: none;
+        font-weight: bold;
+      }
+
+      .my-extension a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="my-extension">
+      <h1>Sotatek TLCD</h1>
+      <p>Author: <b>the.do@sotatek.com</b></p>
+      <p>Version: <b>1.1.1 Beta</b></p>
+      <p>
+        GitHub Repo:
+        <a href="https://github.com/abc"
+          >https://github.com/Sotatek-TheDo/sotatek-tlcd</a
+        >
+      </p>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>

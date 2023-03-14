@@ -190,7 +190,7 @@
                       checkInTime.getHours() < 17
                     ) {
                       this.displayMessage(
-                        `Can't calculate exactly if you take morning off (&plusmn; 30m)`
+                        `Can't calculate exactly if you take morning off (max time)`
                       );
                     }
                     const interval = setInterval(() => {
@@ -209,6 +209,10 @@
                         return;
                       }
                       const tle = document.getElementById("timeLeft");
+                      if (!tle) {
+                        clearInterval(interval);
+                        return;
+                      }
                       const timeLeft = (0, utils_1.convertMsToTime)(
                         millisecondsDiff
                       );
@@ -391,8 +395,8 @@
           return normalizeTime;
         }
         if (time.getHours() >= 12 && time.getHours() < 17) {
-          normalizeTime.setHours(8);
-          normalizeTime.setMinutes(30);
+          normalizeTime.setHours(9);
+          normalizeTime.setMinutes(0);
           normalizeTime.setSeconds(0);
           return normalizeTime;
         }
