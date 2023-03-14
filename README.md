@@ -1,0 +1,22 @@
+# Hướng dẫn cài đặt Sotatek TLCD
+
+## Giới thiệu
+
+Đây là một extension giúp cho việc theo dõi check-in check-out trong ngày một cách dễ dàng bằng Google Chat. Với extension này, bạn có thể:
+
+- Đăng nhập và đăng xuất check in checkout với một cú nhấp chuột.
+- Theo dõi các hoạt động của nhóm dự án trong Google Chat.
+- Quản lý tài liệu và thông tin của dự án một cách dễ dàng.
+
+## Hướng dẫn cài đặt
+
+Để cài đặt extension, bạn có thể làm theo các bước sau:
+
+1. Tải về repo của extension bằng cách nhấp vào nút "Clone or download" trên trang repo.
+2. Giải nén file zip vừa tải về.
+3. Mở Google Chrome và nhập chrome://extensions vào thanh địa chỉ.
+4. Bật chế độ "Developer mode" bằng cách chọn ô vuông ở góc trên bên phải.
+5. Nhấn vào nút "Load unpacked" và chọn thư mục giải nén repo của extension.
+6. Extension sẽ được cài đặt và hiển thị trong trình duyệt của bạn.
+
+Lưu ý: Hiện nay, các tool hiện đại như extension này rất khó để được upload lên Google Chrome Store, vì vậy bạn cần phải sử dụng cách tạm thời này để cài đặt extension.
