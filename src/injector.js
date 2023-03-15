@@ -88,20 +88,60 @@
             fontSize: "18px",
           };
           this.inject();
+          this.lateMinutesOfMonth = 0;
         }
         inject() {
           console.log("inject::");
           chrome.storage.local.get(
             constance_1.STORAGE_KEYS.LOGIN_PORTAL_STATUS,
             (status) => {
-              /* chrome.storage.local.get('employee_month_data', (data) => {
+              chrome.storage.local.get("employee_month_data", (data) => {
                 var _a, _b;
-                const userData = (_b = (_a = data.employee_month_data) === null || _a === void 0 ? void 0 : _a.result) === null || _b === void 0 ? void 0 : _b.records;
-                if (!userData) {
-                    console.log('Cannot get user data');
-                    return;
+                const userData =
+                  (_b =
+                    (_a = data.employee_month_data) === null || _a === void 0
+                      ? void 0
+                      : _a.result) === null || _b === void 0
+                    ? void 0
+                    : _b.records;
+                if (!userData && _b.records && _b.records.length) {
+                  console.log("Cannot get user data");
+                  return;
                 }
-            }); */
+                const records = _b.records;
+                const latestExceptTime = this.getLatestExceptTime();
+                this.lateMinutesOfMonth = Math.floor(
+                  records.reduce((total, record) => {
+                    let lateMinutes = 0;
+                    var _c = record.date_check
+                      ? new Date(record.date_check)
+                      : null;
+                    if (
+                      _c &&
+                      _c.getDay() !== 6 &&
+                      _c.getDay() !== 0 &&
+                      record.check_in
+                    ) {
+                      const checkIn = (0, utils_1.stringToTime)(
+                        record.check_in.split(" ")[1]
+                      );
+                      checkIn.setHours(checkIn.getHours() + 7);
+                      checkIn.setSeconds(0);
+                      if (checkIn.getHours > 12) return total;
+                      lateMinutes =
+                        checkIn.getTime() - latestExceptTime.getTime() > 0
+                          ? (checkIn.getTime() - latestExceptTime.getTime()) /
+                              60000 >
+                            60
+                            ? 60
+                            : (checkIn.getTime() - latestExceptTime.getTime()) /
+                              60000
+                          : 0;
+                    }
+                    return total + lateMinutes;
+                  }, 0)
+                );
+              });
               const toElement = Array.from(
                 document.getElementsByClassName("adZ")
               )[0];
@@ -174,17 +214,33 @@
                         }
                       );
                     }
-                    const latestExceptTime = this.getLatestExceptTime();
-                    const lateDiff =
-                      checkInTime.getTime() - latestExceptTime.getTime();
-                    if (
-                      checkInTime > latestExceptTime &&
-                      checkInTime &&
-                      lateDiff > 60000
-                    ) {
-                      const percentOfWorkTime = (lateDiff / 288000).toFixed(2);
-                      const message = `You're late ${percentOfWorkTime}% of work time &#128184;`;
-                      this.displayMessage(message);
+                    if (this.lateMinutesOfMonth) {
+                      let message;
+                      if (
+                        this.lateMinutesOfMonth - 90 < 0 &&
+                        this.lateMinutesOfMonth - 90 > -30
+                      ) {
+                        message = `Late allowance period: ${
+                          90 - this.lateMinutes
+                        } minutes remaining`;
+                      }
+                      if (
+                        this.lateMinutesOfMonth - 90 > 0 &&
+                        this.lateMinutesOfMonth - 90 < 30
+                      ) {
+                        message = `You're late ${
+                          this.lateMinutesOfMonth - 90
+                        } minutes this month &#128184;`;
+                      }
+                      if (
+                        this.lateMinutesOfMonth - 90 > 0 &&
+                        this.lateMinutesOfMonth - 90 >= 30
+                      ) {
+                        message = `Holy crab! You lack ${
+                          this.lateMinutesOfMonth - 90
+                        } minutes this month &#128184;`;
+                      }
+                      if (message) this.displayMessage(message);
                     }
                     if (
                       checkInTime.getHours() >= 12 &&
