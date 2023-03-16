@@ -91,7 +91,6 @@
           this.lateMinutesOfMonth = 0;
         }
         inject() {
-          console.log("inject::");
           chrome.storage.local.get(
             constance_1.STORAGE_KEYS.LOGIN_PORTAL_STATUS,
             (status) => {
@@ -216,12 +215,13 @@
                     }
                     if (this.lateMinutesOfMonth) {
                       let message;
+                      let bgColor = "#185c10";
                       if (
                         this.lateMinutesOfMonth - 90 < 0 &&
-                        this.lateMinutesOfMonth - 90 > -30
+                        this.lateMinutesOfMonth - 90 > -60
                       ) {
                         message = `Late allowance period: ${
-                          90 - this.lateMinutes
+                          90 - this.lateMinutesOfMonth
                         } minutes remaining`;
                       }
                       if (
@@ -231,23 +231,25 @@
                         message = `You're late ${
                           this.lateMinutesOfMonth - 90
                         } minutes this month &#128184;`;
+                        bgColor = "#a57d04";
                       }
                       if (
                         this.lateMinutesOfMonth - 90 > 0 &&
                         this.lateMinutesOfMonth - 90 >= 30
                       ) {
-                        message = `Holy crab! You lack ${
+                        message = `Holy crab! ${
                           this.lateMinutesOfMonth - 90
-                        } minutes this month &#128184;`;
+                        } minutes missed work time this month &#128184;`;
+                        bgColor = "#ad3a16";
                       }
-                      if (message) this.displayMessage(message);
+                      if (message) this.displayMessage(message, bgColor);
                     }
                     if (
                       checkInTime.getHours() >= 12 &&
                       checkInTime.getHours() < 17
                     ) {
                       this.displayMessage(
-                        `Can't calculate exactly if you take morning off (max time)`
+                        `Cannot calculate exactly (max time has been set)`
                       );
                     }
                     const interval = setInterval(() => {
@@ -326,11 +328,14 @@
           }
           return content;
         }
-        displayMessage(message) {
+        displayMessage(message, bgColor) {
           const tlcd_message = document.getElementById("tlcd_message");
           if (tlcd_message) {
             tlcd_message.style.display = "block";
             tlcd_message.innerHTML = message;
+            if (bgColor) {
+              tlcd_message.style.backgroundColor = bgColor;
+            }
           }
         }
         onClassChange(container, collapsedContainer) {
