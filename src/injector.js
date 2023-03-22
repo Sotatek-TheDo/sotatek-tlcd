@@ -93,57 +93,62 @@
         inject() {
           chrome.storage.local.get(
             constance_1.STORAGE_KEYS.LOGIN_PORTAL_STATUS,
-            (status) => {
-              chrome.storage.local.get("employee_month_data", (data) => {
-                var _a, _b;
-                const userData =
-                  (_b =
-                    (_a = data.employee_month_data) === null || _a === void 0
+            async (status) => {
+              this.lateMinutesOfMonth = await new Promise((resolve, reject) => {
+                chrome.storage.local.get("employee_month_data", (data) => {
+                  var _a, _b;
+                  const userData =
+                    (_b =
+                      (_a = data.employee_month_data) === null || _a === void 0
+                        ? void 0
+                        : _a.result) === null || _b === void 0
                       ? void 0
-                      : _a.result) === null || _b === void 0
-                    ? void 0
-                    : _b.records;
-                if (!userData && _b.records && _b.records.length) {
-                  console.log("Cannot get user data");
-                  return;
-                }
-                const records = _b.records;
-                const latestExceptTime = this.getLatestExceptTime();
-                this.lateMinutesOfMonth = Math.floor(
-                  records.reduce((total, record) => {
-                    let lateMinutes = 0;
-                    var _c = record.date_check
-                      ? new Date(record.date_check)
-                      : null;
-                    if (
-                      _c &&
-                      _c.getDay() !== 6 &&
-                      _c.getDay() !== 0 &&
-                      record.check_in
-                    ) {
-                      const checkIn = (0, utils_1.stringToTime)(
-                        record.check_in.split(" ")[1]
-                      );
-                      checkIn.setHours(checkIn.getHours() + 7);
-                      checkIn.setSeconds(0);
-                      if (checkIn.getHours > 12) return total;
-                      lateMinutes =
-                        checkIn.getTime() - latestExceptTime.getTime() > 0
-                          ? (checkIn.getTime() - latestExceptTime.getTime()) /
-                              60000 >
-                            60
-                            ? 60
-                            : (checkIn.getTime() - latestExceptTime.getTime()) /
-                              60000
-                          : 0;
-                    }
-                    return total + lateMinutes;
-                  }, 0)
-                );
+                      : _b.records;
+                  if (!userData && _b.records && _b.records.length) {
+                    console.log("Cannot get user data");
+                    resolve(0);
+                  }
+                  const records = _b.records;
+                  const latestExceptTime = this.getLatestExceptTime();
+                  const totalLateTime = Math.floor(
+                    records.reduce((total, record) => {
+                      let lateMinutes = 0;
+                      var _c = record.date_check
+                        ? new Date(record.date_check)
+                        : null;
+                      if (
+                        _c &&
+                        _c.getDay() !== 6 &&
+                        _c.getDay() !== 0 &&
+                        record.check_in
+                      ) {
+                        const checkIn = (0, utils_1.stringToTime)(
+                          record.check_in.split(" ")[1]
+                        );
+                        checkIn.setHours(checkIn.getHours() + 7);
+                        checkIn.setSeconds(0);
+                        if (checkIn.getHours > 12) return total;
+                        lateMinutes =
+                          checkIn.getTime() - latestExceptTime.getTime() > 0
+                            ? (checkIn.getTime() - latestExceptTime.getTime()) /
+                                60000 >
+                              60
+                              ? 60
+                              : (checkIn.getTime() -
+                                  latestExceptTime.getTime()) /
+                                60000
+                            : 0;
+                      }
+                      return total + lateMinutes;
+                    }, 0)
+                  );
+                  resolve(totalLateTime);
+                });
               });
               const toElement = Array.from(
                 document.getElementsByClassName("adZ")
               )[0];
+              if (!toElement) return;
               let container = document.getElementById("tlcd");
               let collapsedContainer =
                 document.getElementById("tlcd-collapsed");

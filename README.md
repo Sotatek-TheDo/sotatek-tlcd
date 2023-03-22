@@ -1,5 +1,9 @@
 # Hướng dẫn cài đặt Sotatek TLCD
 
+## Phiên bản
+
+Bản cập nhật mới nhất: `1.1.2 Beta` (22/03/2023)
+
 ## Giới thiệu
 
 Đây là một extension giúp cho việc theo dõi check-in check-out trong ngày một cách dễ dàng bằng Google Chat

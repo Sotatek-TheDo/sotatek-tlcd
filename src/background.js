@@ -53,7 +53,6 @@
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       class Background {
         constructor() {
-          console.log("constructor::");
           this.run("constructor");
           this.listener();
           this.tabId = null;
@@ -65,7 +64,16 @@
             chrome.webNavigation.onCompleted.addListener(
               (details) => {
                 (this.tabId = details.tabId), (this.url = details.url);
-                return this.handler(details.tabId, details.url);
+                const callLoop = setInterval(async () => {
+                  const success = await this.handler(
+                    details.tabId,
+                    details.url
+                  );
+                  if (success) {
+                    clearInterval(callLoop);
+                  } else {
+                  }
+                }, 10000);
               },
               {
                 url: [
@@ -87,148 +95,183 @@
             return;
           }
           if (url.includes("oi=1")) return;
-          chrome.cookies.getAll(
-            { domain: "portal.sotatek.com" },
-            function (cookies) {
-              return __awaiter(this, void 0, void 0, function* () {
-                const portalCookie = cookies[0];
-                if (!portalCookie) {
-                  yield chrome.storage.local.set({
-                    login_portal_status: "no_cookie",
-                  });
-                  (0, utils_1.inject)(tabId);
-                  return;
-                }
-                const sessionHeader = "session_id=" + portalCookie.value;
-                let needCheck = yield new Promise((resolve, reject) => {
-                  chrome.storage.local.get("employee_data", (data) => {
-                    var _a;
-                    if (data.employee_data === undefined) {
-                      resolve(true);
+          return await new Promise((s, f) => {
+            chrome.cookies.getAll(
+              { domain: "portal.sotatek.com" },
+              function (cookies) {
+                const loadedData = __awaiter(
+                  this,
+                  void 0,
+                  void 0,
+                  function* () {
+                    const portalCookie = cookies[0];
+                    if (!portalCookie) {
+                      yield chrome.storage.local.set({
+                        login_portal_status: "no_cookie",
+                      });
+                      (0, utils_1.inject)(tabId);
                       return;
                     }
-                    const userData =
-                      (_a = data.employee_data.result) === null || _a === void 0
-                        ? void 0
-                        : _a.records[0];
-                    const checkedToday =
-                      (userData === null || userData === void 0
-                        ? void 0
-                        : userData.date_check) ===
-                        (0, utils_1.getCurrentFormattedDate)() &&
-                      (userData === null || userData === void 0
-                        ? void 0
-                        : userData.check_in) !== false;
-                    if (checkedToday) resolve(false);
-                    else resolve(true);
-                  });
-                });
-                let loginState = yield new Promise((resolve, reject) => {
-                  chrome.storage.local.get("login_portal_status", (data) => {
-                    if (data.login_portal_status !== "session_up")
-                      resolve(false);
-                    else resolve(true);
-                  });
-                });
-                if (needCheck || !loginState) {
-                  chrome.scripting.executeScript(
-                    {
-                      target: { tabId: tabId },
-                      func: () => {
-                        const elements = document.querySelectorAll("script");
-                        const emailRegex = /\"[\w.-]+@sotatek.com\"/g;
-                        let gb_ie;
-
-                        for (const element of elements) {
-                          const elementText =
-                            element.textContent || element.innerText || "";
-                          const elementMatches = elementText.match(emailRegex);
-                          if (elementMatches && elementMatches.length) {
-                            gb_ie = elementMatches[0].slice(1, -1);
-                            break;
-                          }
+                    const sessionHeader = "session_id=" + portalCookie.value;
+                    let needCheck = yield new Promise((resolve, reject) => {
+                      chrome.storage.local.get("employee_data", (data) => {
+                        var _a;
+                        if (data.employee_data === undefined) {
+                          resolve(true);
                         }
-                        chrome.storage.local.set({ gb_ie });
-                      },
-                    },
-                    () => {}
-                  );
-                  chrome.storage.local.get("gb_ie", (gb_ie) => {
-                    const fetchApis = new fetch_apis_1.default();
-                    fetchApis
-                      .fetchUserId(sessionHeader, gb_ie.gb_ie)
-                      .then((user) =>
-                        __awaiter(this, void 0, void 0, function* () {
-                          if (
-                            user.result === undefined ||
-                            !user.result.length
-                          ) {
-                            console.log("Cannot fetch user id");
-                            yield chrome.storage.local.set({
-                              login_portal_status: "session_expired",
-                            });
-                            (0, utils_1.inject)(tabId);
-                            return;
-                          }
-                          yield chrome.storage.local.set({
-                            login_portal_status: "session_up",
-                          });
-                          const userId =
-                            user.result.records[0].attendance_machine_id;
-                          const currentDate = (0,
-                          utils_1.getCurrentFormattedDate)();
-                          const tomorrow = (0, utils_1.getCurrentFormattedDate)(
-                            1
-                          );
-                          yield fetchApis
-                            .fetchUserData(
-                              sessionHeader,
-                              userId,
-                              currentDate,
-                              tomorrow
-                            )
-                            .then((data) =>
-                              __awaiter(this, void 0, void 0, function* () {
-                                if (data.result === undefined) {
-                                  console.log("Cannot fetch user data");
-                                  return;
-                                }
-                                yield chrome.storage.local.set({
-                                  employee_data: data,
-                                });
-                                (0, utils_1.inject)(tabId);
-                              })
-                            );
-                          const { firstDay, lastDay } = (0,
-                          utils_1.getFormattedMonthRange)();
-                          yield fetchApis
-                            .fetchUserData(
-                              sessionHeader,
-                              userId,
-                              firstDay,
-                              lastDay
-                            )
-                            .then((data) =>
-                              __awaiter(this, void 0, void 0, function* () {
-                                if (data.result === undefined) {
-                                  console.log("Cannot fetch user data");
-                                  return;
-                                }
-                                yield chrome.storage.local.set({
-                                  employee_month_data: data,
-                                });
-                                (0, utils_1.inject)(tabId);
-                              })
-                            );
-                        })
+                        const userData =
+                          (_a = data.employee_data.result) === null ||
+                          _a === void 0
+                            ? void 0
+                            : _a.records[0];
+                        const checkedToday =
+                          (userData === null || userData === void 0
+                            ? void 0
+                            : userData.date_check) ===
+                            (0, utils_1.getCurrentFormattedDate)() &&
+                          (userData === null || userData === void 0
+                            ? void 0
+                            : userData.check_in) !== false;
+                        if (checkedToday) resolve(false);
+                        else resolve(true);
+                      });
+                    });
+                    let loginState = yield new Promise((resolve, reject) => {
+                      chrome.storage.local.get(
+                        "login_portal_status",
+                        (data) => {
+                          if (data.login_portal_status !== "session_up")
+                            resolve(false);
+                          else resolve(true);
+                        }
                       );
-                  });
-                } else {
-                  (0, utils_1.inject)(tabId);
-                }
-              });
-            }
-          );
+                    });
+                    if (needCheck || !loginState) {
+                      yield new Promise((resolve, reject) => {
+                        chrome.scripting.executeScript(
+                          {
+                            target: { tabId: tabId },
+                            func: () => {
+                              const elements =
+                                document.querySelectorAll("script");
+                              const emailRegex = /\"[\w.-]+@sotatek.com\"/g;
+                              let gb_ie;
+
+                              for (const element of elements) {
+                                const elementText =
+                                  element.textContent ||
+                                  element.innerText ||
+                                  "";
+                                const elementMatches =
+                                  elementText.match(emailRegex);
+                                if (elementMatches && elementMatches.length) {
+                                  gb_ie = elementMatches[0].slice(1, -1);
+                                  break;
+                                }
+                              }
+                              chrome.storage.local.set({ gb_ie });
+                              resolve();
+                            },
+                          },
+                          () => {
+                            resolve();
+                          }
+                        );
+                      });
+                      return yield new Promise((resolve, reject) => {
+                        chrome.storage.local.get("gb_ie", (gb_ie) => {
+                          const fetchApis = new fetch_apis_1.default();
+                          fetchApis
+                            .fetchUserId(sessionHeader, gb_ie.gb_ie)
+                            .then((user) =>
+                              __awaiter(this, void 0, void 0, function* () {
+                                let success = false;
+                                if (
+                                  user.result === undefined ||
+                                  !user.result.length
+                                ) {
+                                  console.log("Cannot fetch user id");
+                                  yield chrome.storage.local.set({
+                                    login_portal_status: "session_expired",
+                                  });
+                                  (0, utils_1.inject)(tabId);
+                                  resolve();
+                                }
+                                yield chrome.storage.local.set({
+                                  login_portal_status: "session_up",
+                                });
+                                const userId =
+                                  user.result.records[0].attendance_machine_id;
+                                const currentDate = (0,
+                                utils_1.getCurrentFormattedDate)();
+                                const tomorrow = (0,
+                                utils_1.getCurrentFormattedDate)(1);
+                                yield fetchApis
+                                  .fetchUserData(
+                                    sessionHeader,
+                                    userId,
+                                    currentDate,
+                                    tomorrow
+                                  )
+                                  .then((data) =>
+                                    __awaiter(
+                                      this,
+                                      void 0,
+                                      void 0,
+                                      function* () {
+                                        if (data.result === undefined) {
+                                          console.log("Cannot fetch user data");
+                                          return;
+                                        }
+                                        yield chrome.storage.local.set({
+                                          employee_data: data,
+                                        });
+                                        (0, utils_1.inject)(tabId);
+                                        success = true;
+                                      }
+                                    )
+                                  );
+                                const { firstDay, lastDay } = (0,
+                                utils_1.getFormattedMonthRange)();
+                                yield fetchApis
+                                  .fetchUserData(
+                                    sessionHeader,
+                                    userId,
+                                    firstDay,
+                                    lastDay
+                                  )
+                                  .then((data) =>
+                                    __awaiter(
+                                      this,
+                                      void 0,
+                                      void 0,
+                                      function* () {
+                                        if (data.result === undefined) {
+                                          console.log("Cannot fetch user data");
+                                          return;
+                                        }
+                                        yield chrome.storage.local.set({
+                                          employee_month_data: data,
+                                        });
+                                        (0, utils_1.inject)(tabId);
+                                      }
+                                    )
+                                  );
+                                resolve(success);
+                              })
+                            );
+                        });
+                      });
+                    } else {
+                      (0, utils_1.inject)(tabId);
+                      return true;
+                    }
+                  }
+                );
+                s(loadedData);
+              }
+            );
+          });
         }
 
         listener() {
