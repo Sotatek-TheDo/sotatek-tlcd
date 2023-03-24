@@ -97,18 +97,14 @@
               this.lateMinutesOfMonth = await new Promise((resolve, reject) => {
                 chrome.storage.local.get("employee_month_data", (data) => {
                   var _a, _b;
-                  const userData =
+                  const records =
                     (_b =
                       (_a = data.employee_month_data) === null || _a === void 0
                         ? void 0
                         : _a.result) === null || _b === void 0
                       ? void 0
                       : _b.records;
-                  if (!userData && _b.records && _b.records.length) {
-                    console.log("Cannot get user data");
-                    resolve(0);
-                  }
-                  const records = _b.records;
+                  if (!records) return;
                   const latestExceptTime = this.getLatestExceptTime();
                   const totalLateTime = Math.floor(
                     records.reduce((total, record) => {
@@ -190,6 +186,7 @@
                           : _a.result) === null || _b === void 0
                         ? void 0
                         : _b.records[0];
+                    if (!userData) return;
                     if (!userData.check_in) {
                       container.innerHTML = this.getInnerHtml(
                         constance_1.INNER_HTML_TYPE.MESSAGE,

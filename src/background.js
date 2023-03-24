@@ -62,18 +62,24 @@
         run(caller) {
           if (caller === "constructor") {
             chrome.webNavigation.onCompleted.addListener(
-              (details) => {
+              async (details) => {
                 (this.tabId = details.tabId), (this.url = details.url);
-                const callLoop = setInterval(async () => {
-                  const success = await this.handler(
-                    details.tabId,
-                    details.url
-                  );
-                  if (success) {
-                    clearInterval(callLoop);
-                  } else {
-                  }
-                }, 10000);
+                const doneInFirstTime = await this.handler(
+                  details.tabId,
+                  details.url
+                );
+                if (!doneInFirstTime) {
+                  const callLoop = setInterval(async () => {
+                    const success = await this.handler(
+                      details.tabId,
+                      details.url
+                    );
+                    if (success) {
+                      clearInterval(callLoop);
+                    } else {
+                    }
+                  }, 10000);
+                }
               },
               {
                 url: [
@@ -176,7 +182,6 @@
                                 }
                               }
                               chrome.storage.local.set({ gb_ie });
-                              resolve();
                             },
                           },
                           () => {
