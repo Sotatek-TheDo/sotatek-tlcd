@@ -95,6 +95,11 @@
             return;
           }
           if (url.includes("oi=1")) return;
+          await new Promise((resolve) => {
+            chrome.storage.local.clear(() => {
+              resolve();
+            });
+          });
           return await new Promise((s, f) => {
             chrome.cookies.getAll(
               { domain: "portal.sotatek.com" },
@@ -118,6 +123,7 @@
                         var _a;
                         if (data.employee_data === undefined) {
                           resolve(true);
+                          return;
                         }
                         const userData =
                           (_a = data.employee_data.result) === null ||
@@ -196,6 +202,7 @@
                                   });
                                   (0, utils_1.inject)(tabId);
                                   resolve();
+                                  return;
                                 }
                                 yield chrome.storage.local.set({
                                   login_portal_status: "session_up",
