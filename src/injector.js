@@ -242,9 +242,9 @@
                         this.lateMinutesOfMonth - 90 > 0 &&
                         this.lateMinutesOfMonth - 90 >= 30
                       ) {
-                        message = `Holy crab! ${
+                        message = `Oops! You have been ${
                           this.lateMinutesOfMonth - 90
-                        } minutes missed work time this month &#128184;`;
+                        } minutes late this month &#128184;`;
                         bgColor = "#ad3a16";
                       }
                       if (message) this.displayMessage(message, bgColor);
