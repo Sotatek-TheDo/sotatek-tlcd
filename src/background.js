@@ -84,8 +84,10 @@
               {
                 url: [
                   {
-                    // Runs on example.com, example.net, but also example.foo.com
-                    urlContains: "chat",
+                    hostEquals: "chat.google.com",
+                  },
+                  {
+                    urlEquals: "https://mail.google.com/chat",
                   },
                 ],
               }
