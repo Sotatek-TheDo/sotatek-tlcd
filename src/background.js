@@ -200,6 +200,7 @@
                               __awaiter(this, void 0, void 0, function* () {
                                 let success = false;
                                 if (
+                                  !user ||
                                   user.result === undefined ||
                                   !user.result.length
                                 ) {
