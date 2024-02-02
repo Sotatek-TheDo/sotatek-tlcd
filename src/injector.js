@@ -349,6 +349,7 @@
           const panel = Array.from(
             document.getElementsByClassName("oy8Mbf")
           )[0];
+          if (!panel) return;
           this.switchView(panel, container, collapsedContainer);
           const observer = new MutationObserver((mutationList) => {
             for (const mutation of mutationList) {
