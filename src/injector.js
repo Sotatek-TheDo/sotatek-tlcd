@@ -82,7 +82,7 @@
           };
           this.collapsedContainerStyle = {
             display: "none",
-            margin: "5px auto",
+            margin: "3px 15px 10px",
             padding: "2px",
             borderRadius: "4px",
             fontSize: "18px",
@@ -347,7 +347,7 @@
         }
         onClassChange(container, collapsedContainer) {
           const panel = Array.from(
-            document.getElementsByClassName("oy8Mbf nn")
+            document.getElementsByClassName("oy8Mbf")
           )[0];
           this.switchView(panel, container, collapsedContainer);
           const observer = new MutationObserver((mutationList) => {
@@ -364,8 +364,7 @@
         }
         switchView(panel, expand, collapsed) {
           if (
-            panel.classList.contains("bhZ") &&
-            !panel.classList.contains("bym")
+            panel.classList.contains("bhZ")
           ) {
             expand.style.display = "none";
             collapsed.style.display = "block";
