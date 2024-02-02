@@ -78,7 +78,7 @@
             boxSizing: "border-box",
             backgroundColor: "inherit",
             color: "inherit",
-            marginTop: "5px",
+            marginTop: "3px"
           };
           this.collapsedContainerStyle = {
             display: "none",
@@ -95,7 +95,7 @@
             constance_1.STORAGE_KEYS.LOGIN_PORTAL_STATUS,
             async (status) => {
               const toElement = Array.from(
-                document.getElementsByClassName("adZ")
+                document.getElementsByClassName("oy8Mbf")
               )[0];
               if (!toElement) return;
               let container = document.getElementById("tlcd");
@@ -105,14 +105,14 @@
                 container = document.createElement("div");
                 this.setStyle(container, this.containerStyle);
                 container.setAttribute("id", "tlcd");
-                toElement.insertBefore(container, toElement.firstChild);
+                toElement.appendChild(container, toElement.firstChild);
               }
               if (!collapsedContainer) {
                 collapsedContainer = document.createElement("div");
                 this.setStyle(collapsedContainer, this.collapsedContainerStyle);
                 collapsedContainer.innerHTML = "&#9201;";
                 collapsedContainer.setAttribute("id", "tlcd-collapsed");
-                toElement.insertBefore(
+                toElement.appendChild(
                   collapsedContainer,
                   toElement.firstChild
                 );
@@ -183,6 +183,7 @@
                   constance_1.STORAGE_KEYS.EMPLOYEE_DATA,
                   (data) => {
                     var _a, _b;
+                    const totalLateBalance = 90;
                     const userData =
                       (_b =
                         (_a = data.employee_data) === null || _a === void 0
@@ -223,28 +224,28 @@
                       let message;
                       let bgColor = "#185c10";
                       if (
-                        this.lateMinutesOfMonth - 90 < 0 &&
-                        this.lateMinutesOfMonth - 90 > -60
+                        this.lateMinutesOfMonth - totalLateBalance < 0 &&
+                        this.lateMinutesOfMonth - totalLateBalance > -60
                       ) {
                         message = `Late allowance period: ${
-                          90 - this.lateMinutesOfMonth
+                          totalLateBalance - this.lateMinutesOfMonth
                         } minutes remaining`;
                       }
                       if (
-                        this.lateMinutesOfMonth - 90 > 0 &&
-                        this.lateMinutesOfMonth - 90 < 30
+                        this.lateMinutesOfMonth - totalLateBalance > 0 &&
+                        this.lateMinutesOfMonth - totalLateBalance < 30
                       ) {
                         message = `You're late ${
-                          this.lateMinutesOfMonth - 90
+                          this.lateMinutesOfMonth - totalLateBalance
                         } minutes this month &#128184;`;
                         bgColor = "#a57d04";
                       }
                       if (
-                        this.lateMinutesOfMonth - 90 > 0 &&
-                        this.lateMinutesOfMonth - 90 >= 30
+                        this.lateMinutesOfMonth - totalLateBalance > 0 &&
+                        this.lateMinutesOfMonth - totalLateBalance >= 30
                       ) {
                         message = `Oops! You have been ${
-                          this.lateMinutesOfMonth - 90
+                          this.lateMinutesOfMonth - totalLateBalance
                         } minutes late this month &#128184;`;
                         bgColor = "#ad3a16";
                       }
@@ -313,7 +314,7 @@
         getInnerHtml(type, data) {
           let content = "";
           if (type === constance_1.INNER_HTML_TYPE.TIME_INFO) {
-            content = `<div style="width: inherit; box-sizing: border-box; margin-right: 16px"; display: fixed">
+            content = `<div style="width: inherit; box-sizing: border-box; margin-right: 16px; margin-bottom: 10px"; display: fixed">
                   <div id="tlcd_message" style="width: fit-content; background-color: #df4c1d; font-weight: bold;; color: white; font-size: 10px; border-radius: 4px; display: none; padding: 2px 10px; margin-bottom: 2px"></div>
                   <div style="width: inherit;">
                       <div style="display: flex">
