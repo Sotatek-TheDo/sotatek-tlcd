@@ -331,7 +331,7 @@
                 </div>`;
           }
           if (type === constance_1.INNER_HTML_TYPE.MESSAGE) {
-            content = `<div style="width: inherit; background-color: #6086a1; border-radius: 2px; display: block; text-align: center; padding: 3px 2px; color: white">${data.message}</div>`;
+            content = `<div style="width: inherit; background-color: #6086a1; border-radius: 2px; margin-bottom: 10px; display: block; text-align: center; padding: 3px 2px; color: white">${data.message}</div>`;
           }
           return content;
         }
